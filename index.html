@@ -1,0 +1,177 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Amigo Invisible</title>
+
+    <!-- Ícono de la página -->
+    <link rel="icon" href="https://i.pinimg.com/736x/c8/16/59/c8165902ed694541494509753987cc8b.jpg" type="image/jpg">
+
+    <style>
+        /* Estilos generales */
+        body {
+            margin: 0;
+            font-family: 'Arial', sans-serif;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            height: 100vh;
+            background-color: rgba(111, 0, 0, 0.6);
+        }
+
+        /* Contenedor principal */
+        .container {
+            position: relative;
+            background: url("https://i.pinimg.com/736x/c8/16/59/c8165902ed694541494509753987cc8b.jpg") no-repeat center center;
+            background-size: cover;
+            padding: 20px 40px;
+            border-radius: 10px;
+            box-shadow: 0 4px 10px rgba(0, 0, 0, 0.5);
+            text-align: center;
+            width: 80%;
+            max-width: 500px;
+        }
+
+        /* Capa oscura dentro del contenedor */
+        .container::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background-color: rgba(0, 0, 0, 0.6); /* Oscurecer la imagen dentro del cuadro */
+            border-radius: 10px;
+            z-index: 1;
+        }
+
+        .content {
+            position: relative;
+            z-index: 2; /* Superpone el contenido encima de la capa oscura */
+        }
+
+        h1 {
+            margin-top: 0;
+            font-size: 2em;
+            color: white;
+        }
+
+        label, p {
+            font-size: 1.1em;
+            color: white;
+        }
+
+        input[type="text"] {
+            width: calc(100% - 22px);
+            padding: 10px;
+            margin: 10px 0;
+            border: none;
+            border-radius: 5px;
+            font-size: 1em;
+        }
+
+        button {
+            background-color: #4CAF50;
+            color: white;
+            padding: 10px 20px;
+            border: none;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 1em;
+        }
+
+        button:disabled {
+            background-color: rgb(20, 95, 5);
+            cursor: not-allowed;
+        }
+
+        button:hover:enabled {
+            background-color: #45a049;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="content">
+            <h1>¡Descubrí a quién hacerle un regalo en 2025!</h1>
+            <label for="inputName">Ingresa tu nombre:</label>
+            <input type="text" id="inputName" placeholder="Ingresá tu nombre..." oninput="habilitarBotonAsignar()">
+            <button id="assignButton" onclick="asignarNombre()" disabled>Asignar nombre</button>
+            <p><strong>Nombre asignado: </strong><span id="nombreAsignado">Ninguno</span></p>
+            <button id="resetButton" style="display: none;" onclick="resetearAsignaciones()">Reiniciar asignación de nombres</button>
+        </div>
+    </div>
+
+    <script>
+const nombres = ["Lourdes", "Eugenio", "Fernando", "Ivan", "Lucia", "Malena", "Nicolas", "Paula", "Tomas", "Luli Rosemberg"];
+let asignacionesRealizadas = JSON.parse(localStorage.getItem('asignacionesRealizadas')) || [];
+
+// Normaliza los nombres para ignorar mayúsculas/minúsculas
+const normalizarNombre = nombre => nombre.trim().toLowerCase();
+
+function habilitarBotonAsignar() {
+    const input = document.getElementById('inputName').value.trim();
+    document.getElementById('assignButton').disabled = input === "";
+}
+
+function asignarNombre() {
+    const nombreUsuario = normalizarNombre(document.getElementById('inputName').value);
+
+    if (nombreUsuario === "adminlourdes") {
+        alert("No puedes asignar nombres como AdminLourdes. Usa el botón de reinicio.");
+        return;
+    }
+
+    // Verificar si el nombre está en la lista
+    const nombreEncontrado = nombres.find(nombre => normalizarNombre(nombre) === nombreUsuario);
+    if (!nombreEncontrado) {
+        alert("El nombre ingresado no está en la lista.");
+        return;
+    }
+
+    // Verificar si ya está asignado
+    if (asignacionesRealizadas.some(asignacion => normalizarNombre(asignacion.usuario) === nombreUsuario)) {
+        alert("Este nombre ya ha recibido una asignación.");
+        return;
+    }
+
+    // Opciones disponibles (excluyendo usuario y asignados)
+    const opcionesDisponibles = nombres.filter(nombre =>
+        normalizarNombre(nombre) !== nombreUsuario &&
+        !asignacionesRealizadas.some(asignacion => normalizarNombre(asignacion.asignado) === normalizarNombre(nombre))
+    );
+
+    if (opcionesDisponibles.length === 0) {
+        alert("No hay nombres disponibles para asignar.");
+        return;
+    }
+
+    const nombreAsignado = opcionesDisponibles[Math.floor(Math.random() * opcionesDisponibles.length)];
+    asignacionesRealizadas.push({ usuario: nombreUsuario, asignado: nombreAsignado });
+    localStorage.setItem('asignacionesRealizadas', JSON.stringify(asignacionesRealizadas));
+
+    document.getElementById('nombreAsignado').innerText = nombreAsignado;
+    document.getElementById('assignButton').disabled = true;
+}
+
+function resetearAsignaciones() {
+    localStorage.removeItem('asignacionesRealizadas');
+    asignacionesRealizadas = [];
+    document.getElementById('nombreAsignado').innerText = "Ninguno";
+    document.getElementById('inputName').value = "";
+    document.getElementById('assignButton').disabled = true;
+}
+
+function mostrarBotonReiniciar() {
+    const nombreUsuario = normalizarNombre(document.getElementById('inputName').value);
+    const resetButton = document.getElementById('resetButton');
+    resetButton.style.display = nombreUsuario === "adminlourdes" ? "inline-block" : "none";
+}
+
+// Inicializar evento para mostrar/ocultar botón
+document.getElementById('inputName').addEventListener('input', mostrarBotonReiniciar);
+
+    </script>
+</body>
+</html>
